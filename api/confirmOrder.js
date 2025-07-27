@@ -12,25 +12,45 @@ router.post('/confirm-order', async (req, res) => {
     // --- Input Validation ---
     if (!orderDocId) {
       console.error('Validation error: Missing orderDocId');
-      return res.status(400).json({ error: 'Missing orderDocId' });
+      return res.status(400).json({
+        success: false,
+        status: 'error',
+        message: 'Missing orderDocId',
+      });
     }
     if (!paymentStatus || typeof paymentStatus !== 'string') {
       console.error('Validation error: Invalid paymentStatus');
-      return res.status(400).json({ error: 'Invalid paymentStatus' });
+      return res.status(400).json({
+        success: false,
+        status: 'error',
+        message: 'Invalid paymentStatus',
+      });
     }
     if (!Array.isArray(orderItems) || orderItems.length === 0) {
       console.error('Validation error: No orderItems or empty array');
-      return res.status(400).json({ error: 'No orderItems.' });
+      return res.status(400).json({
+        success: false,
+        status: 'error',
+        message: 'No orderItems.',
+      });
     }
 
     for (const [index, item] of orderItems.entries()) {
       if (!item?.id || item.id.trim() === '') {
         console.error(`Validation error: Invalid itemId at index ${index}:`, item);
-        return res.status(400).json({ error: `Invalid itemId [${index}]` });
+        return res.status(400).json({
+          success: false,
+          status: 'error',
+          message: `Invalid itemId [${index}]`,
+        });
       }
       if (typeof item.quantity !== 'number' || item.quantity <= 0) {
         console.error(`Validation error: Invalid quantity at index ${index}:`, item.quantity);
-        return res.status(400).json({ error: `Invalid quantity for item [${index}]` });
+        return res.status(400).json({
+          success: false,
+          status: 'error',
+          message: `Invalid quantity for item [${index}]`,
+        });
       }
     }
 
@@ -66,6 +86,7 @@ router.post('/confirm-order', async (req, res) => {
         console.log(`Checking stock for item ${snap.id}: currentQty=${currentQty}, requestedQty=${qtyToDecrement}`);
         if (currentQty < qtyToDecrement) {
           console.warn(`Insufficient stock for bakery item ${snap.id}: current ${currentQty}, requested ${qtyToDecrement}`);
+          // Return object to inform frontend insufficient stock
           return { success: false, insufficientItemId: snap.id };
         }
       }
@@ -87,22 +108,34 @@ router.post('/confirm-order', async (req, res) => {
 
       console.log('Transaction updates queued successfully.');
 
+      // Return success flag
       return { success: true };
     });
 
     if (!result.success) {
       console.error(`Transaction failed due to insufficient stock of item: ${result.insufficientItemId}`);
       return res.status(400).json({
-        error: `Insufficient stock for item ${result.insufficientItemId}`
+        success: false,
+        status: 'payment_confirmed_order_cancelled',
+        message: `Insufficient stock for item ${result.insufficientItemId}`,
+        insufficientItemId: result.insufficientItemId,
       });
     }
 
     console.log('Order confirmed and stock decremented successfully.');
-    return res.status(200).json({ message: 'Order confirmed and stock decremented' });
+    return res.status(200).json({
+      success: true,
+      status: 'success',
+      message: 'Order confirmed and stock decremented',
+    });
 
   } catch (error) {
     console.error('Order/stock API error:', error);
-    res.status(500).json({ error: error.message || String(error) });
+    return res.status(500).json({
+      success: false,
+      status: 'error',
+      message: error.message || String(error),
+    });
   }
 });
 
