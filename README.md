@@ -27,20 +27,16 @@ Serves as a transactional endpoint to confirm orders, update payment and order s
 - Firebase Admin SDK initialized and `db`/`admin` exported and properly configured
 - Environment variables for Firestore Admin credentials (handled outside this module)
   
----
-
 ### Installation
 
 1. Clone the repository:
 
-```git clone https://github.com/toshankanwar/Bakery-Item_decrement-Server.git
-cd Bakery-Item_decrement-Server ```
-
+git clone https://github.com/toshankanwar/Bakery-Item_decrement-Server.git
+cd Bakery-Item_decrement-Server
 
 2. Install dependencies:
 
-`` npm install ``
-
+npm install
 
 3. Configure environment variables and Firebase Admin credentials.
 
